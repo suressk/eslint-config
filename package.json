@@ -1,0 +1,91 @@
+{
+  "name": "@suressk/eslint-config",
+  "version": "0.0.0",
+  "description": "K.'s preset ESLint configuration",
+  "packageManager": "pnpm@10.33.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./configs": {
+      "types": "./dist/configs/index.d.ts",
+      "default": "./dist/configs/index.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "default": "./dist/types.js"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "default": "./dist/utils.js"
+    },
+    "./globs": {
+      "types": "./dist/globs.d.ts",
+      "default": "./dist/globs.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "vite build",
+    "prepare": "pnpm run build",
+    "dev": "vite build --watch",
+    "lint": "eslint --config eslint.config.ts .",
+    "lint:fix": "eslint --config eslint.config.ts . --fix",
+    "test": "eslint --config eslint.config.ts ."
+  },
+  "keywords": [
+    "eslint",
+    "eslintconfig",
+    "preset",
+    "typescript",
+    "react"
+  ],
+  "author": {
+    "name": "suressk",
+    "email": "suresskun@outlook.com"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "eslint": ">=10.0.0"
+  },
+  "dependencies": {
+    "eslint-flat-config-utils": "^3.2.0",
+    "local-pkg": "^1.1.2"
+  },
+  "devDependencies": {
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/minimist": "^1.2.5",
+    "@types/node": "^20.0.0",
+    "@types/prompts": "^2.4.9",
+    "@types/semver": "^7.7.1",
+    "@typescript-eslint/eslint-plugin": "^8.59.2",
+    "@typescript-eslint/parser": "^8.59.2",
+    "eslint": "^10.0.0",
+    "eslint-plugin-jsonc": "^3.1.2",
+    "eslint-plugin-react": "^7.0.0",
+    "eslint-plugin-react-hooks": "^4.0.0",
+    "eslint-plugin-yml": "^3.3.2",
+    "execa": "^9.6.1",
+    "fs-extra": "^11.3.5",
+    "jiti": "^2.7.0",
+    "lint-staged": "^17.0.4",
+    "minimist": "^1.2.8",
+    "picocolors": "^1.1.1",
+    "prompts": "^2.4.2",
+    "semver": "^7.8.0",
+    "typescript": "^5.0.0",
+    "vite": "^8.0.13",
+    "vite-plugin-dts": "^5.0.0",
+    "yaml-eslint-parser": "^2.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "lint-staged": {
+    "*": "eslint --fix"
+  }
+}
