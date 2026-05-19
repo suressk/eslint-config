@@ -1,30 +1,11 @@
 {
   "name": "@suressk/eslint-config",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "K.'s preset ESLint configuration",
   "packageManager": "pnpm@10.33.0",
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./configs": {
-      "types": "./dist/configs/index.d.ts",
-      "default": "./dist/configs/index.js"
-    },
-    "./types": {
-      "types": "./dist/types.d.ts",
-      "default": "./dist/types.js"
-    },
-    "./utils": {
-      "types": "./dist/utils.d.ts",
-      "default": "./dist/utils.js"
-    },
-    "./globs": {
-      "types": "./dist/globs.d.ts",
-      "default": "./dist/globs.js"
-    },
+    ".": "./dist/index.mjs",
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -56,6 +37,7 @@
   },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1",
+    "@microsoft/api-extractor": "^7.58.7",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@types/fs-extra": "^11.0.4",
     "@types/minimist": "^1.2.5",

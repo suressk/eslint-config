@@ -7,14 +7,9 @@ export default defineConfig({
     target: 'node18',
     outDir: 'dist',
     lib: {
-      entry: {
-        index: resolve(__dirname, 'src/index.ts'),
-        'configs/index': resolve(__dirname, 'src/configs/index.ts'),
-        types: resolve(__dirname, 'src/types.ts'),
-        utils: resolve(__dirname, 'src/utils.ts'),
-        globs: resolve(__dirname, 'src/globs.ts'),
-      },
+      entry: resolve(__dirname, 'src/index.ts'),
       formats: ['es'],
+      fileName: () => 'index.mjs',
     },
     rollupOptions: {
       external: [
@@ -24,6 +19,7 @@ export default defineConfig({
         /^eslint-plugin-/,
         /^@eslint-community\//,
         /^@eslint\//,
+        /^@stylistic\//,
         'vue-eslint-parser',
         'yaml-eslint-parser',
         'toml-eslint-parser',
@@ -32,16 +28,15 @@ export default defineConfig({
         'local-pkg',
       ],
       output: {
-        preserveModules: true,
-        preserveModulesRoot: 'src',
+        codeSplitting: false,
       },
     },
   },
   plugins: [
     dts({
-      outDir: 'dist',
       include: ['src'],
       exclude: ['src/plugins.ts'],
+      bundleTypes: true,
     }),
   ],
 })
