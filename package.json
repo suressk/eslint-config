@@ -1,6 +1,6 @@
 {
   "name": "@suressk/eslint-config",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "K.'s preset ESLint configuration",
   "packageManager": "pnpm@10.33.0",
   "type": "module",
@@ -31,7 +31,7 @@
     "build": "vite build",
     "prepare": "pnpm run build",
     "dev": "vite build --watch",
-    "lint": "eslint --config eslint.config.ts .",
+    "lint": "eslint",
     "lint:fix": "eslint --config eslint.config.ts . --fix",
     "test": "eslint --config eslint.config.ts ."
   },
