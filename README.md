@@ -100,7 +100,7 @@ export default combine(
 
 | Path | Description |
 |------|-------------|
-| `@suressk/eslint-config` | Main entry - `preset()` factory |
+| `@suressk/eslint-config` | Main entry - `lintPreset()` factory |
 | `@suressk/eslint-config/configs` | Individual config modules |
 | `@suressk/eslint-config/types` | Type definitions |
 | `@suressk/eslint-config/utils` | Utility functions (`combine`, etc.) |
