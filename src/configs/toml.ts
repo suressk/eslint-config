@@ -1,16 +1,22 @@
-import type { OptionsOverrides, OptionsFiles, TypedFlatConfigItem } from '../types'
+import type { OptionsFiles, OptionsOverrides, OptionsStylistic, TypedFlatConfigItem } from '../types'
 
 import { GLOB_TOML } from '../globs'
+import { tryInteropDefault } from '../utils'
 
 export async function toml(
-  options: OptionsOverrides & OptionsFiles & { indent?: number | 'tab' } = {},
+  options: OptionsOverrides & OptionsFiles & OptionsStylistic = {},
 ): Promise<TypedFlatConfigItem[]> {
-  const { overrides = {}, indent = 2 } = options
-  const files = options.files ?? [GLOB_TOML]
+  const { overrides = {}, stylistic: stylisticOpt = true } = options
 
-  const [{ default: pluginToml }] = await Promise.all([
-    import('eslint-plugin-toml'),
-  ])
+  const indent = typeof stylisticOpt === 'object' && stylisticOpt.indent ? stylisticOpt.indent : 2
+
+  const [pluginToml, parserToml] = await Promise.all([
+    tryInteropDefault(import('eslint-plugin-toml')),
+    tryInteropDefault(import('toml-eslint-parser')),
+  ] as const)
+
+  if (!pluginToml || !parserToml)
+    return []
 
   return [
     {
@@ -20,23 +26,17 @@ export async function toml(
       },
     },
     {
+      files: [GLOB_TOML],
       name: 'suressk/toml/rules',
-      files,
       languageOptions: {
-        parser: (await import('toml-eslint-parser')) as any,
+        parser: parserToml,
       },
       rules: {
-        'toml/comma-style': 'error',
         'toml/indent': ['warn', indent],
         'toml/keys-order': 'off',
         'toml/no-mixed-type-arrays': 'error',
-        'toml/no-non-decimal-integers': 'error',
         'toml/no-space-dots': 'error',
-        'toml/no-unreadable-number-separator': 'error',
-        'toml/precision-of-fractional-seconds': 'error',
-        'toml/precision-of-integers': 'error',
         'toml/tables-order': 'error',
-        'toml/vue-custom-block/no-parsing-error': 'error',
 
         ...overrides,
       },

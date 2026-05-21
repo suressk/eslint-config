@@ -1,152 +1,312 @@
 import type { Awaitable, PresetOptions, TypedFlatConfigItem } from './types'
 
 import { FlatConfigComposer } from 'eslint-flat-config-utils'
-import { javascript } from './configs/javascript'
-import { ignores } from './configs/ignores'
+import { isPackageExists } from 'local-pkg'
+import {
+  astro,
+  comments,
+  disables,
+  formatters,
+  ignores,
+  imports,
+  javascript,
+  jsdoc,
+  jsonc,
+  jsx,
+  markdown,
+  node,
+  perfectionist,
+  react,
+  regexp,
+  sortPackageJson,
+  sortTsconfig,
+  stylistic,
+  svelte,
+  test,
+  toml,
+  typescript,
+  unicorn,
+  vue,
+  yaml,
+} from './configs'
+import { isInEditorEnv, tryInteropDefault } from './utils'
 
-const DEFAULT_OPTIONS: PresetOptions = {
-  javascript: true,
-  typescript: true,
-  react: false,
-  vue: false,
-  jsonc: true,
-  yaml: true,
-  toml: false,
-  markdown: false,
-  css: false,
-  graphql: false,
-  xml: false,
-  astro: false,
-  svelte: false,
-  comments: true,
-  renamePlugins: true,
+export const defaultPluginRenaming = {
+  '@stylistic': 'style',
+  '@typescript-eslint': 'ts',
+  'import-lite': 'import',
+  'n': 'node',
+  'vitest': 'test',
+  'yml': 'yaml',
 }
 
+const flatConfigProps: Array<keyof TypedFlatConfigItem> = [
+  'name',
+  'languageOptions',
+  'linterOptions',
+  'processor',
+  'plugins',
+  'rules',
+  'settings',
+]
+
+const VuePackages = ['vue', 'nuxt', 'vitepress', '@slidev/cli']
+
 export function lintPreset(
-  options: PresetOptions = {},
+  options: PresetOptions & Omit<TypedFlatConfigItem, 'files' | 'ignores'> = {},
   ...userConfigs: Array<Awaitable<TypedFlatConfigItem | TypedFlatConfigItem[]>>
 ): FlatConfigComposer<TypedFlatConfigItem> {
-  const opts: PresetOptions = {
-    ...DEFAULT_OPTIONS,
-    ...options,
+  const {
+    astro: enableAstro = false,
+    comments: _enableComments = true,
+    componentExts = [],
+    css: _enableCss = false,
+    formatters: enableFormatters = false,
+    graphql: _enableGraphql = false,
+    ignores: userIgnores = [],
+    imports: enableImports = true,
+    isInEditor: _isInEditor,
+    javascript: _enableJavascript = true,
+    jsdoc: enableJsdoc = true,
+    jsonc: enableJsonc = true,
+    jsx: enableJsx = true,
+    lessOpinionated: _lessOpinionated = false,
+    markdown: enableMarkdown = true,
+    node: enableNode = true,
+    perfectionist: enablePerfectionist = true,
+    react: enableReact = false,
+    regexp: enableRegexp = true,
+    renamePlugins: autoRenamePlugins = true,
+    stylistic: enableStylistic = true,
+    svelte: enableSvelte = false,
+    test: enableTest = true,
+    toml: enableToml = true,
+    typescript: enableTypeScript = isPackageExists('typescript'),
+    unicorn: enableUnicorn = true,
+    vue: enableVue = VuePackages.some(i => isPackageExists(i)),
+    xml: _enableXml = false,
+    yaml: enableYaml = true,
+  } = options
+
+  let isInEditor = _isInEditor
+  if (isInEditor == null) {
+    isInEditor = isInEditorEnv()
   }
+
+  const stylisticOptions = enableStylistic === false
+    ? false
+    : typeof enableStylistic === 'object'
+      ? enableStylistic
+      : {}
+
+  if (stylisticOptions && !('jsx' in stylisticOptions)) {
+    stylisticOptions.jsx = typeof enableJsx === 'object' ? true : enableJsx
+  }
+
+  const typescriptOptions = resolveSubOptions(options, 'typescript')
+  const _tsconfigPath = 'tsconfigPath' in typescriptOptions ? typescriptOptions.tsconfigPath : undefined
 
   const configs: Array<Awaitable<TypedFlatConfigItem | TypedFlatConfigItem[]>> = []
 
-  // Ignores
-  configs.push(ignores(opts.ignores))
-
-  // Base JavaScript
-  if (opts.javascript !== false) {
-    configs.push(javascript({ overrides: opts.overrides }))
-  }
-
-  // TypeScript
-  if (opts.typescript) {
-    const tsOpts = typeof opts.typescript === 'object'
-      ? { overrides: opts.overrides, tsconfigPath: opts.typescript.tsconfigPath }
-      : { overrides: opts.overrides }
-    configs.push(
-      import('./configs/typescript').then(m => m.typescript(tsOpts))
-    )
-  }
-
-  // React
-  if (opts.react) {
-    const reactVersion = typeof opts.react === 'object' ? opts.react.version : undefined
-    configs.push(
-      import('./configs/react').then(m => m.react({ overrides: opts.overrides, version: reactVersion }))
-    )
-  }
-
-  // Vue
-  if (opts.vue) {
-    configs.push(
-      import('./configs/vue').then(m => m.vue({ overrides: opts.overrides }))
-    )
-  }
-
-  // JSONC
-  if (opts.jsonc) {
-    configs.push(
-      import('./configs/jsonc').then(m => m.jsonc({ overrides: opts.overrides }))
-    )
-  }
-
-  // YAML
-  if (opts.yaml) {
-    configs.push(
-      import('./configs/yaml').then(m => m.yaml({ overrides: opts.overrides }))
-    )
-  }
-
-  // TOML
-  if (opts.toml) {
-    configs.push(
-      import('./configs/toml').then(m => m.toml({ overrides: opts.overrides }))
-    )
-  }
-
-  // Markdown
-  if (opts.markdown) {
-    configs.push(
-      import('./configs/markdown').then(m => m.markdown({ overrides: opts.overrides }))
-    )
-  }
-
-  // CSS
-  if (opts.css) {
-    configs.push(
-      import('./configs/css').then(m => m.css({ overrides: opts.overrides }))
-    )
-  }
-
-  // GraphQL
-  if (opts.graphql) {
-    configs.push(
-      import('./configs/graphql').then(m => m.graphql({ overrides: opts.overrides }))
-    )
-  }
-
-  // XML
-  if (opts.xml) {
-    configs.push(
-      import('./configs/xml').then(m => m.xml({ overrides: opts.overrides }))
-    )
-  }
-
-  // Astro
-  if (opts.astro) {
-    configs.push(
-      import('./configs/astro').then(m => m.astro({ overrides: opts.overrides }))
-    )
-  }
-
-  // Svelte
-  if (opts.svelte) {
-    configs.push(
-      import('./configs/svelte').then(m => m.svelte({ overrides: opts.overrides }))
-    )
-  }
-
-  // Comments
-  if (opts.comments !== false) {
-    configs.push(
-      import('./configs/comments').then(m => m.comments())
-    )
-  }
-
-  // Build the composer with all configs
-  const composer = new FlatConfigComposer<TypedFlatConfigItem>(
-    ...configs,
-    ...userConfigs
+  // gitignore integration
+  configs.push(
+    tryInteropDefault(import('eslint-config-flat-gitignore')).then(r => r
+      ? [r({
+          name: 'suressk/gitignore',
+          strict: false,
+        })]
+      : []),
   )
 
-  if (opts.renamePlugins) {
-    composer.renamePlugins({
-      '@typescript-eslint': 'ts',
-    })
+  // Base configs (always on)
+  configs.push(
+    ignores(userIgnores),
+    javascript({
+      overrides: getOverrides(options, 'javascript'),
+    }),
+    comments(),
+  )
+
+  if (enablePerfectionist) {
+    configs.push(perfectionist({
+      overrides: getOverrides(options, 'perfectionist'),
+    }))
+  }
+
+  if (enableImports) {
+    configs.push(imports({
+      stylistic: stylisticOptions,
+      overrides: getOverrides(options, 'imports'),
+    }))
+  }
+
+  if (enableNode) {
+    configs.push(node())
+  }
+
+  if (enableJsdoc) {
+    configs.push(jsdoc({ stylistic: stylisticOptions }))
+  }
+
+  if (enableUnicorn) {
+    configs.push(unicorn(
+      typeof enableUnicorn === 'object' ? enableUnicorn : {},
+    ))
+  }
+
+  if (enableJsx) {
+    configs.push(jsx(
+      typeof enableJsx === 'object' ? enableJsx : {},
+    ))
+  }
+
+  if (enableTypeScript) {
+    configs.push(typescript({
+      ...typescriptOptions,
+      componentExts,
+      overrides: getOverrides(options, 'typescript'),
+      type: 'app',
+    }))
+  }
+
+  if (stylisticOptions) {
+    configs.push(stylistic({
+      ...stylisticOptions,
+      overrides: getOverrides(options, 'stylistic'),
+    }))
+  }
+
+  if (enableRegexp) {
+    configs.push(regexp({
+      overrides: getOverrides(options, 'regexp'),
+    }))
+  }
+
+  if (enableTest) {
+    configs.push(test({
+      isInEditor,
+      overrides: getOverrides(options, 'test'),
+    }))
+  }
+
+  if (enableVue) {
+    configs.push(vue({
+      ...resolveSubOptions(options, 'vue'),
+      overrides: getOverrides(options, 'vue'),
+      stylistic: stylisticOptions,
+      typescript: !!enableTypeScript,
+    }))
+  }
+
+  if (enableReact) {
+    configs.push(react({
+      overrides: getOverrides(options, 'react'),
+    }))
+  }
+
+  if (enableSvelte) {
+    configs.push(svelte({
+      overrides: getOverrides(options, 'svelte'),
+      stylistic: stylisticOptions,
+      typescript: !!enableTypeScript,
+    }))
+  }
+
+  if (enableAstro) {
+    configs.push(astro({
+      overrides: getOverrides(options, 'astro'),
+      stylistic: stylisticOptions,
+    }))
+  }
+
+  if (enableJsonc) {
+    configs.push(
+      jsonc({
+        overrides: getOverrides(options, 'jsonc'),
+        stylistic: stylisticOptions,
+      }),
+      sortPackageJson(),
+      sortTsconfig(),
+    )
+  }
+
+  if (enableYaml) {
+    configs.push(
+      yaml({
+        overrides: getOverrides(options, 'yaml'),
+        stylistic: stylisticOptions,
+      }),
+    )
+  }
+
+  if (enableToml) {
+    configs.push(
+      toml({
+        overrides: getOverrides(options, 'toml'),
+        stylistic: stylisticOptions,
+      }),
+    )
+  }
+
+  if (enableMarkdown) {
+    configs.push(
+      markdown({
+        componentExts,
+        overrides: getOverrides(options, 'markdown'),
+      }),
+    )
+  }
+
+  if (enableFormatters) {
+    configs.push(
+      formatters(
+        typeof enableFormatters === 'boolean' ? {} : enableFormatters,
+      ),
+    )
+  }
+
+  configs.push(disables())
+
+  // User can optionally pass a flat config item to the first argument
+  const fusedConfig = flatConfigProps.reduce((acc, key) => {
+    if (key in options)
+      (acc as any)[key] = (options as any)[key]
+    return acc
+  }, {} as TypedFlatConfigItem)
+
+  if (Object.keys(fusedConfig).length)
+    configs.push([fusedConfig])
+
+  let composer = new FlatConfigComposer<TypedFlatConfigItem>()
+
+  composer = composer.append(
+    ...configs,
+    ...userConfigs as any,
+  )
+
+  if (autoRenamePlugins) {
+    composer = composer.renamePlugins(defaultPluginRenaming)
   }
 
   return composer
+}
+
+export function resolveSubOptions<K extends keyof PresetOptions>(
+  options: PresetOptions,
+  key: K,
+): any {
+  return typeof options[key] === 'boolean'
+    ? {}
+    : options[key] || {}
+}
+
+export function getOverrides<K extends keyof PresetOptions>(
+  options: PresetOptions,
+  key: K,
+): Record<string, unknown> {
+  const sub = resolveSubOptions(options, key)
+  return {
+    ...((options.overrides as any)?.[key] ?? {}),
+    ...((sub as any)?.overrides ?? {}),
+  }
 }

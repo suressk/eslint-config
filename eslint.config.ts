@@ -1,39 +1,22 @@
-import preset from './src'
+import lintPreset from './src'
 
-export default preset({
+export default lintPreset({
+  stylistic: {
+    indent: 2,
+    quotes: 'single',
+    semi: false,
+  },
   typescript: true,
   jsonc: true,
   yaml: true,
-  comments: true,
+  toml: true,
+  markdown: true,
+  test: false,
+  formatters: false,
+  ignores: ['README.md', '.vscode/**'],
 })
-  .prepend({
-    ignores: ['**/coverage/**', '.claude/**'],
-  })
-  .override('suressk/typescript/rules', {
-    rules: {
-      'ts/explicit-module-boundary-types': 'off',
-    },
-  })
   .append({
-    files: ['**/*.d.ts'],
-    rules: {
-      'ts/no-explicit-any': 'off',
-    },
-  })
-  .append({
-    files: ['scripts/**', 'test/**'],
-    rules: {
-      'no-console': 'off',
-    },
-  })
-  .append({
-    files: ['src/configs/**'],
-    rules: {
-      'ts/no-explicit-any': 'off',
-    },
-  })
-  .append({
-    files: ['src/utils.ts'],
+    files: ['src/configs/**', 'src/types/plugins.d.ts'],
     rules: {
       'ts/no-explicit-any': 'off',
     },

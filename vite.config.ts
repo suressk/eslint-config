@@ -1,6 +1,6 @@
+import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
-import { resolve } from 'path'
 
 export default defineConfig({
   build: {
@@ -20,12 +20,16 @@ export default defineConfig({
         /^@eslint-community\//,
         /^@eslint\//,
         /^@stylistic\//,
+        '@vitest/eslint-plugin', 'eslint-plugin-no-only-tests',
         'vue-eslint-parser',
         'yaml-eslint-parser',
         'toml-eslint-parser',
         'astro-eslint-parser',
         'svelte-eslint-parser',
+        'eslint-config-flat-gitignore',
         'local-pkg',
+        'node:process',
+        'node:url',
       ],
       output: {
         codeSplitting: false,

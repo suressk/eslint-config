@@ -1,6 +1,7 @@
-import type { OptionsOverrides, OptionsFiles, TypedFlatConfigItem } from '../types'
+import type { OptionsFiles, OptionsOverrides, TypedFlatConfigItem } from '../types'
 
 import { GLOB_STYLE } from '../globs'
+import { parserPlain } from '../utils'
 
 export async function css(
   options: OptionsOverrides & OptionsFiles = {},
@@ -8,29 +9,15 @@ export async function css(
   const { overrides = {} } = options
   const files = options.files ?? [GLOB_STYLE]
 
-  // Lint CSS-like files using the built-in parser (no plugin required)
   return [
     {
-      name: 'suressk/css/rules',
       files,
+      name: 'suressk/css/rules',
       languageOptions: {
-        parser: {
-          parse() {
-            return { type: 'Program', body: [], sourceType: 'module', comments: [], tokens: [], range: [0, 0], loc: { start: { line: 1, column: 0 }, end: { line: 1, column: 0 } } }
-          },
-          parseForESLint(code: string) {
-            return {
-              ast: { type: 'Program', body: [], sourceType: 'module', comments: [], tokens: [], range: [0, code.length], loc: { start: { line: 1, column: 0 }, end: { line: 1, column: code.length } } },
-              services: { isPlain: true },
-              scopeManager: null,
-              visitorKeys: null,
-            }
-          },
-        },
+        parser: parserPlain,
       },
       rules: {
         'no-irregular-whitespace': 'off',
-
         ...overrides,
       },
     },

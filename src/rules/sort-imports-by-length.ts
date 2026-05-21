@@ -85,7 +85,7 @@ export const sortImportsByLength: Rule.RuleModule = {
     function addImport(
       node: any,
       isType: boolean,
-      kind: 'import' | 'require'
+      kind: 'import' | 'require',
     ) {
       const text = sourceCode.getText(node as any)
       const range = node.range as [number, number]
@@ -114,8 +114,8 @@ export const sortImportsByLength: Rule.RuleModule = {
         if (imports.length <= 1) return
 
         // Separate into type and value groups
-        const typeImports = imports.filter((i) => i.type === 'type')
-        const valueImports = imports.filter((i) => i.type === 'value')
+        const typeImports = imports.filter(i => i.type === 'type')
+        const valueImports = imports.filter(i => i.type === 'value')
 
         // Sort each group by length descending (longest first)
         const sortGroup = (group: ImportInfo[]) =>
@@ -142,14 +142,14 @@ export const sortImportsByLength: Rule.RuleModule = {
         if (blankLineBetweenGroups && typeImports.length > 0 && valueImports.length > 0) {
           // Find the first value import in the desired order
           // and check if there's a blank line before it in the source
-          const firstValueIdx = desired.findIndex((i) => i.type === 'value')
+          const firstValueIdx = desired.findIndex(i => i.type === 'value')
           if (firstValueIdx >= 0) {
             const prevImport = desired[firstValueIdx - 1]
             const currentImport = desired[firstValueIdx]
             // Check if there's a blank line between them in the original text
             const betweenText = sourceCode.text.slice(
               prevImport.range[1],
-              currentImport.range[0]
+              currentImport.range[0],
             )
             // A blank line means two consecutive newlines
             if (!betweenText.includes('\n\n') && !betweenText.includes('\n\r\n')) {
@@ -162,22 +162,26 @@ export const sortImportsByLength: Rule.RuleModule = {
 
         // Report: either on the first out-of-order import, or at the boundary
         if (needsSort) {
-          context.report({
-            node: desired.find((imp, i) => imp.node !== imports[i].node)!.node,
-            messageId: 'unsorted',
-            fix(fixer) {
-              return buildFix(
-                fixer,
-                sourceCode,
-                imports,
-                desired,
-                blankLineBetweenGroups
-              )
-            },
-          })
-        } else if (needsBlankLine) {
+          const firstMismatch = desired.find((imp, i) => imp.node !== imports[i].node)
+          if (firstMismatch) {
+            context.report({
+              node: firstMismatch.node,
+              messageId: 'unsorted',
+              fix(fixer) {
+                return buildFix(
+                  fixer,
+                  sourceCode,
+                  imports,
+                  desired,
+                  blankLineBetweenGroups,
+                )
+              },
+            })
+          }
+        }
+        else if (needsBlankLine) {
           // Only blank line needed — report on the boundary
-          const firstValueIdx = desired.findIndex((i) => i.type === 'value')
+          const firstValueIdx = desired.findIndex(i => i.type === 'value')
           context.report({
             node: desired[firstValueIdx].node,
             messageId: 'groupSeparation',
@@ -187,7 +191,7 @@ export const sortImportsByLength: Rule.RuleModule = {
                 sourceCode,
                 imports,
                 desired,
-                blankLineBetweenGroups
+                blankLineBetweenGroups,
               )
             },
           })
@@ -202,13 +206,16 @@ function buildFix(
   sourceCode: SourceCode,
   original: ImportInfo[],
   sorted: ImportInfo[],
-  blankLineBetweenGroups: boolean
+  blankLineBetweenGroups: boolean,
 ) {
   if (sorted.length === 0) return null
 
   // Get the leading whitespace (indentation + preceding blank lines) from the first import
-  const firstRange = original[0]!.range
-  const lastRange = original[original.length - 1]!.range
+  const first = original[0]
+  const last = original[original.length - 1]
+  if (!first || !last) return null
+  const firstRange = first.range
+  const lastRange = last.range
 
   // Build the sorted text block
   const lines: string[] = []
@@ -216,10 +223,10 @@ function buildFix(
 
   for (const imp of sorted) {
     if (
-      blankLineBetweenGroups &&
-      prevType === 'type' &&
-      imp.type === 'value' &&
-      lines.length > 0
+      blankLineBetweenGroups
+      && prevType === 'type'
+      && imp.type === 'value'
+      && lines.length > 0
     ) {
       lines.push('')
     }
@@ -227,7 +234,7 @@ function buildFix(
     // Preserve original indentation
     const ownLine = sourceCode.text.slice(
       sourceCode.text.lastIndexOf('\n', imp.range[0]) + 1,
-      imp.range[0]
+      imp.range[0],
     )
     lines.push(ownLine + imp.text)
     prevType = imp.type
@@ -236,8 +243,8 @@ function buildFix(
   // Find the trailing newline after the last import to preserve it
   const textAfterLast = sourceCode.text.slice(lastRange[1])
   const firstNewlineAfter = textAfterLast.indexOf('\n')
-  const trailingContent =
-    firstNewlineAfter >= 0
+  const trailingContent
+    = firstNewlineAfter >= 0
       ? textAfterLast.slice(0, firstNewlineAfter + 1)
       : textAfterLast
 
@@ -245,7 +252,7 @@ function buildFix(
 
   return fixer.replaceTextRange(
     [firstRange[0], lastRange[1] + (firstNewlineAfter >= 0 ? firstNewlineAfter + 1 : 0)],
-    replacement
+    replacement,
   )
 }
 

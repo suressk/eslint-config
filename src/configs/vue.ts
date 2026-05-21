@@ -1,19 +1,25 @@
-import type { OptionsOverrides, OptionsFiles, TypedFlatConfigItem } from '../types'
-import type { Linter } from 'eslint'
+import type { OptionsFiles, OptionsOverrides, OptionsStylistic, TypedFlatConfigItem } from '../types'
 
 import { GLOB_VUE } from '../globs'
+import { parserPlain, tryInteropDefault } from '../utils'
 
 export async function vue(
-  options: OptionsOverrides & OptionsFiles & { vueVersion?: 2 | 3 } = {},
+  options: OptionsOverrides & OptionsFiles & OptionsStylistic & { typescript?: boolean, vueVersion?: 2 | 3 } = {},
 ): Promise<TypedFlatConfigItem[]> {
-  const { overrides = {}, vueVersion = 3 } = options
+  const { overrides = {}, stylistic: stylisticOpt = true, typescript = false, vueVersion = 3 } = options
   const files = options.files ?? [GLOB_VUE]
 
-  const [{ default: pluginVue }] = await Promise.all([
-    import('eslint-plugin-vue'),
-  ])
+  const [pluginVue, parserVue] = await Promise.all([
+    tryInteropDefault(import('eslint-plugin-vue')),
+    tryInteropDefault(import('vue-eslint-parser')),
+  ] as const)
 
-  const parser = (await import('vue-eslint-parser')) as unknown as Linter.Parser
+  if (!pluginVue || !parserVue)
+    return []
+
+  const tsParser = typescript
+    ? await tryInteropDefault(import('@typescript-eslint/parser'))
+    : null
 
   return [
     {
@@ -23,34 +29,36 @@ export async function vue(
       },
     },
     {
-      name: 'suressk/vue/rules',
       files,
+      name: 'suressk/vue/rules',
       languageOptions: {
-        parser,
+        parser: parserVue,
         parserOptions: {
           ecmaFeatures: { jsx: true },
           extraFileExtensions: ['.vue'],
-          parser: await import('@typescript-eslint/parser') as any,
+          parser: tsParser ?? parserPlain,
           sourceType: 'module',
         },
       },
       rules: {
         ...(vueVersion === 3
-          ? (pluginVue as any).configs?.['vue3-recommended']?.rules ?? {}
-          : (pluginVue as any).configs?.['vue2-recommended']?.rules ?? {}
-        ),
-
-        // Override some rules
+          ? (pluginVue as any).configs['flat/recommended']?.rules ?? {}
+          : {}),
         'vue/multi-word-component-names': 'off',
         'vue/no-v-html': 'warn',
         'vue/require-default-prop': 'off',
-        'vue/require-prop-types': 'warn',
         'vue/component-name-in-template-casing': ['error', 'PascalCase'],
-        'vue/component-definition-name-casing': ['error', 'PascalCase'],
-        'vue/prefer-import-from-vue': 'error',
         'vue/block-order': ['error', { order: ['script', 'template', 'style'] }],
-        'vue/no-duplicate-attr-inheritance': 'error',
         'vue/no-empty-component-block': 'warn',
+
+        ...(stylisticOpt
+          ? {
+              'vue/attributes-order': ['error', { order: ['DEFINITION', 'LIST_RENDERING', 'CONDITIONALS', 'RENDER_MODIFIERS', 'GLOBAL', 'UNIQUE', 'TWO_WAY_BINDING', 'OTHER_DIRECTIVES', 'OTHER_ATTR', 'EVENTS', 'CONTENT'] }],
+              'vue/component-api-style': ['error', ['script-setup', 'composition']],
+              'vue/no-v-text': 'error',
+              'vue/padding-line-between-blocks': ['error', 'always'],
+            }
+          : {}),
 
         ...overrides,
       },

@@ -1,15 +1,18 @@
-import type { OptionsOverrides, OptionsFiles, OptionsStylistic, TypedFlatConfigItem } from '../types'
+import type { OptionsFiles, OptionsOverrides, OptionsStylistic, TypedFlatConfigItem } from '../types'
 
-import { GLOB_JSON, GLOB_JSONC, GLOB_JSON5 } from '../globs'
+import { GLOB_JSON, GLOB_JSON5, GLOB_JSONC } from '../globs'
+import { tryInteropDefault } from '../utils'
 
 export async function jsonc(
   options: OptionsOverrides & OptionsFiles & OptionsStylistic = {},
 ): Promise<TypedFlatConfigItem[]> {
-  const { overrides = {}, indent = 2 } = options
+  const { overrides = {}, stylistic: stylisticOpt = true } = options
 
-  const [{ default: pluginJsonc }] = await Promise.all([
-    import('eslint-plugin-jsonc'),
-  ])
+  const pluginJsonc = await tryInteropDefault(import('eslint-plugin-jsonc'))
+  if (!pluginJsonc)
+    return []
+
+  const indent = typeof stylisticOpt === 'object' && stylisticOpt.indent ? stylisticOpt.indent : 2
 
   const commonRules: Record<string, unknown> = {
     'jsonc/no-dupe-keys': 'error',
@@ -18,8 +21,6 @@ export async function jsonc(
     'jsonc/sort-keys': 'off',
     'jsonc/no-irregular-whitespace': 'warn',
     'jsonc/no-useless-escape': 'warn',
-    'jsonc/space-unary-ops': 'error',
-    'jsonc/vue-custom-block/no-parsing-error': 'error',
     ...overrides,
   }
 
@@ -30,43 +31,35 @@ export async function jsonc(
         jsonc: pluginJsonc as any,
       },
     },
-    // JSON (strict)
     {
-      name: 'suressk/jsonc/json-rules',
       files: [GLOB_JSON],
       language: 'jsonc/json',
+      name: 'suressk/jsonc/json-rules',
       rules: {
         ...commonRules,
         'jsonc/no-comments': 'error',
         'jsonc/comma-dangle': ['error', 'never'],
         'jsonc/no-binary-expression': 'error',
-        'jsonc/no-escape-sequence-in-identifier': 'error',
-        'jsonc/no-hexadecimal-numeric-literals': 'error',
-        'jsonc/no-octal-numeric-literals': 'error',
         'jsonc/no-numeric-separators': 'error',
         'jsonc/no-sparse-arrays': 'error',
         'jsonc/no-template-literals': 'error',
-        'jsonc/no-undefined-value': 'error',
-        'jsonc/no-unicode-codepoint-escapes': 'error',
         'jsonc/valid-json-number': 'error',
       },
     },
-    // JSONC (JSON with comments)
     {
-      name: 'suressk/jsonc/jsonc-rules',
       files: [GLOB_JSONC],
       language: 'jsonc/jsonc',
+      name: 'suressk/jsonc/jsonc-rules',
       rules: {
         ...commonRules,
         'jsonc/no-comments': 'off',
         'jsonc/comma-dangle': ['error', 'never'],
       },
     },
-    // JSON5
     {
-      name: 'suressk/jsonc/json5-rules',
       files: [GLOB_JSON5],
       language: 'jsonc/json5',
+      name: 'suressk/jsonc/json5-rules',
       rules: {
         ...commonRules,
         'jsonc/no-comments': 'off',

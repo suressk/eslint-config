@@ -1,6 +1,7 @@
-import type { OptionsOverrides, OptionsFiles, TypedFlatConfigItem } from '../types'
+import type { OptionsFiles, OptionsOverrides, TypedFlatConfigItem } from '../types'
 
 import { GLOB_JSX, GLOB_TSX } from '../globs'
+import { tryInteropDefault } from '../utils'
 
 export async function react(
   options: OptionsOverrides & OptionsFiles & { version?: string } = {},
@@ -8,31 +9,32 @@ export async function react(
   const { overrides = {}, version = 'detect' } = options
   const files = options.files ?? [GLOB_JSX, GLOB_TSX]
 
-  const [{ default: reactPlugin }, { default: reactHooksPlugin }] = await Promise.all([
-    import('eslint-plugin-react'),
-    import('eslint-plugin-react-hooks'),
-  ])
+  const [pluginReact, pluginReactHooks] = await Promise.all([
+    tryInteropDefault(import('eslint-plugin-react')),
+    tryInteropDefault(import('eslint-plugin-react-hooks')),
+  ] as const)
+
+  if (!pluginReact)
+    return []
 
   return [
     {
       name: 'suressk/react/setup',
       plugins: {
-        react: reactPlugin,
-        'react-hooks': reactHooksPlugin,
+        react: pluginReact,
+        ...(pluginReactHooks ? { 'react-hooks': pluginReactHooks } : {}),
       },
       settings: {
         react: { version },
       },
     },
     {
-      name: 'suressk/react/rules',
       files,
+      name: 'suressk/react/rules',
       rules: {
-        // React 17+ JSX transform
         'react/jsx-uses-react': 'off',
         'react/react-in-jsx-scope': 'off',
 
-        // Best practices
         'react/jsx-uses-vars': 'error',
         'react/jsx-no-undef': 'error',
         'react/jsx-key': ['warn', { checkFragmentShorthand: true }],
@@ -40,18 +42,17 @@ export async function react(
         'react/no-danger-with-children': 'warn',
         'react/no-deprecated': 'warn',
         'react/no-direct-mutation-state': 'error',
-        'react/no-find-dom-node': 'warn',
-        'react/no-render-return-value': 'error',
         'react/no-string-refs': 'error',
         'react/no-unescaped-entities': 'warn',
         'react/no-unknown-property': 'error',
-        'react/require-render-return': 'error',
 
-        // Hooks
-        'react-hooks/rules-of-hooks': 'error',
-        'react-hooks/exhaustive-deps': 'warn',
+        ...(pluginReactHooks
+          ? {
+              'react-hooks/rules-of-hooks': 'error',
+              'react-hooks/exhaustive-deps': 'warn',
+            }
+          : {}),
 
-        // Style
         'react/self-closing-comp': 'warn',
         'react/jsx-curly-brace-presence': ['warn', { props: 'never', children: 'never' }],
         'react/jsx-boolean-value': ['warn', 'never'],

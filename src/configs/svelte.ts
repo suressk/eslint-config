@@ -1,17 +1,25 @@
-import type { OptionsOverrides, OptionsFiles, TypedFlatConfigItem } from '../types'
-import type { Linter } from 'eslint'
+import type { OptionsFiles, OptionsOverrides, OptionsStylistic, TypedFlatConfigItem } from '../types'
 
 import { GLOB_SVELTE } from '../globs'
+import { tryInteropDefault } from '../utils'
 
 export async function svelte(
-  options: OptionsOverrides & OptionsFiles = {},
+  options: OptionsOverrides & OptionsFiles & OptionsStylistic & { typescript?: boolean } = {},
 ): Promise<TypedFlatConfigItem[]> {
-  const { overrides = {} } = options
+  const { overrides = {}, typescript = false } = options
   const files = options.files ?? [GLOB_SVELTE]
 
-  const [{ default: pluginSvelte }] = await Promise.all([
-    import('eslint-plugin-svelte'),
-  ])
+  const [pluginSvelte, parserSvelte] = await Promise.all([
+    tryInteropDefault(import('eslint-plugin-svelte')),
+    tryInteropDefault(import('svelte-eslint-parser')),
+  ] as const)
+
+  if (!pluginSvelte || !parserSvelte)
+    return []
+
+  const tsParser = typescript
+    ? await tryInteropDefault(import('@typescript-eslint/parser'))
+    : null
 
   return [
     {
@@ -21,29 +29,20 @@ export async function svelte(
       },
     },
     {
-      name: 'suressk/svelte/rules',
       files,
+      name: 'suressk/svelte/rules',
       languageOptions: {
-        parser: (await import('svelte-eslint-parser')) as unknown as Linter.Parser,
+        parser: parserSvelte,
         parserOptions: {
           extraFileExtensions: ['.svelte'],
-          parser: await import('@typescript-eslint/parser') as any,
+          parser: tsParser ?? undefined,
         },
       },
       rules: {
         ...(pluginSvelte as any).configs?.recommended?.rules ?? {},
-
-        'svelte/no-at-debug-tags': 'warn',
-        'svelte/no-at-html-tags': 'error',
         'svelte/no-dupe-else-if-blocks': 'error',
         'svelte/no-dupe-style-properties': 'error',
-        'svelte/no-dynamic-slot-name': 'error',
-        'svelte/no-not-function-handler': 'error',
-        'svelte/no-object-in-text-mustaches': 'error',
-        'svelte/no-shorthand-style-property-overrides': 'error',
-        'svelte/no-unknown-style-directive-property': 'error',
         'svelte/valid-compile': 'error',
-
         ...overrides,
       },
     },

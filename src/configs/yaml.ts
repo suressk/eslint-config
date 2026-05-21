@@ -1,16 +1,22 @@
-import type { OptionsOverrides, OptionsFiles, TypedFlatConfigItem } from '../types'
+import type { OptionsFiles, OptionsOverrides, OptionsStylistic, TypedFlatConfigItem } from '../types'
 
 import { GLOB_YAML } from '../globs'
+import { tryInteropDefault } from '../utils'
 
 export async function yaml(
-  options: OptionsOverrides & OptionsFiles & { indent?: number | 'tab' } = {},
+  options: OptionsOverrides & OptionsFiles & OptionsStylistic = {},
 ): Promise<TypedFlatConfigItem[]> {
-  const { overrides = {}, indent = 2 } = options
-  const files = options.files ?? [GLOB_YAML]
+  const { overrides = {}, stylistic: stylisticOpt = true } = options
 
-  const [{ default: pluginYml }] = await Promise.all([
-    import('eslint-plugin-yml'),
-  ])
+  const indent = typeof stylisticOpt === 'object' && stylisticOpt.indent ? stylisticOpt.indent : 2
+
+  const [pluginYml, parserYaml] = await Promise.all([
+    tryInteropDefault(import('eslint-plugin-yml')),
+    tryInteropDefault(import('yaml-eslint-parser')),
+  ] as const)
+
+  if (!pluginYml || !parserYaml)
+    return []
 
   return [
     {
@@ -20,10 +26,10 @@ export async function yaml(
       },
     },
     {
+      files: [GLOB_YAML],
       name: 'suressk/yaml/rules',
-      files,
       languageOptions: {
-        parser: (await import('yaml-eslint-parser')) as any,
+        parser: parserYaml,
       },
       rules: {
         'yaml/indent': ['warn', indent],
@@ -33,8 +39,6 @@ export async function yaml(
         'yaml/no-empty-mapping-value': 'error',
         'yaml/no-empty-sequence-entry': 'error',
         'yaml/no-irregular-whitespace': 'warn',
-        'yaml/plain-scalar': 'off',
-        'yaml/vue-custom-block/no-parsing-error': 'error',
 
         ...overrides,
       },
