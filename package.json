@@ -23,12 +23,19 @@
     "eslint",
     "eslintconfig",
     "preset",
-    "typescript",
-    "react"
+    "typescript"
   ],
   "author": {
     "name": "suressk",
     "email": "suresskun@outlook.com"
+  },
+  "homepage": "https://github.com/suressk/eslint-config",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/suressk/eslint-config.git"
+  },
+  "bugs": {
+    "url": "https://github.com/suressk/eslint-config/issues"
   },
   "license": "MIT",
   "peerDependencies": {
