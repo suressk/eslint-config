@@ -10,13 +10,7 @@ Built with the compose pattern for ESLint flat config.
 pnpm add -D eslint @suressk/eslint-config
 ```
 
-For TypeScript support:
-
-```bash
-pnpm add -D @typescript-eslint/eslint-plugin @typescript-eslint/parser
-```
-
-Additional plugins are installed on-demand based on which features you enable. ESLint will prompt you to install missing plugins.
+All required plugins and parsers are included as dependencies — no additional installs needed.
 
 ## Usage
 
@@ -33,7 +27,7 @@ export default lintPreset({
 
 ### Compose API
 
-The `lint()` function returns a `FlatConfigComposer` with chainable methods:
+The `lintPreset()` function returns a `FlatConfigComposer` with chainable methods:
 
 ```ts
 export default lintPreset({ typescript: true })
