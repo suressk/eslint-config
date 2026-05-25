@@ -28,10 +28,7 @@ jobs:
 
       - run: pnpm install
 
-      - run: pnpx changelogithub
-        continue-on-error: true
-        # env:
-        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: pnpm run build
 
       - run: pnpm -r publish --access public --no-git-checks
         env:
