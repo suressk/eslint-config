@@ -13,21 +13,19 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: ⚙️ Checkout code
+        uses: actions/checkout@v4
 
-      - name: Install pnpm
+      - name: 🪜 Install pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Set node
+      - name: 🖥️ Setup node
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
 
-      - name: Install
+      - name: 🏗️ Install deps
         run: pnpm i
 
-      - name: Build
-        run: pnpm run build
-
-      - name: LintFix
+      - name: 🛠️ LintFix
         run: pnpm run lint:fix
