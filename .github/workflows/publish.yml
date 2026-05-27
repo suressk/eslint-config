@@ -11,7 +11,7 @@ jobs:
 
     permissions:
       contents: read
-      id-token: write # ← OIDC 必需
+      id-token: write
 
     steps:
       - name: ⚙️ Checkout code

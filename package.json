@@ -1,6 +1,6 @@
 {
   "name": "@suressk/eslint-config",
-  "version": "1.0.5",
+  "version": "0.0.3",
   "description": "K.'s preset ESLint configuration",
   "packageManager": "pnpm@10.33.0",
   "type": "module",
@@ -101,6 +101,6 @@
     }
   },
   "lint-staged": {
-    "*": "eslint --fix"
+    "*": "eslint --config eslint.config.ts ."
   }
 }
