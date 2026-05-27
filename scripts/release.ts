@@ -57,16 +57,6 @@ async function main(): Promise<void> {
   if (!confirmRelease)
     return
 
-  // release a version must to update version
-  // const { confirmToUpdateVersion }: { confirmToUpdateVersion: boolean } =
-  //   await prompts({
-  //     type: 'confirm',
-  //     name: 'confirmToUpdateVersion',
-  //     message: `Confirm to update version?`
-  //   })
-  // if (confirmToUpdateVersion) {
-  // }
-
   step('\nUpdating package version...')
   updateVersion(pkgPath, targetVersion)
 
@@ -75,20 +65,6 @@ async function main(): Promise<void> {
   await run('git', ['tag', tag]) // add tag
   await run('git', ['push', 'origin', `refs/tags/${tag}`]) // push tag to github
   await run('git', ['push'])
-
-  // it needs log-in, so give up publishing with this way
-  // publish to npm
-  // const { confirmPublish }: { confirmPublish: boolean } = await prompts({
-  //   type: 'confirm',
-  //   name: 'confirmPublish',
-  //   message: `Confirm publishing to npmjs?`
-  // })
-
-  // if (!confirmPublish) {
-  //   return
-  // }
-
-  // await run('npm', ['publish'])
 }
 
 main().catch((e) => {
