@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
-      id-token: write
+      contents: read
+      id-token: write # ← OIDC 必需
 
     steps:
       - name: ⚙️ Checkout code
@@ -36,6 +36,4 @@ jobs:
         run: pnpm run build
 
       - name: 🚀 Publish
-        run: pnpm publish --access public --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+        run: pnpm publish --access public --provenance
