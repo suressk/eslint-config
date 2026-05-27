@@ -1,6 +1,6 @@
 {
   "name": "@suressk/eslint-config",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "K.'s preset ESLint configuration",
   "packageManager": "pnpm@10.33.0",
   "type": "module",
@@ -17,7 +17,8 @@
     "dev": "vite build --watch",
     "lint": "eslint --config eslint.config.ts .",
     "lint:fix": "eslint --config eslint.config.ts . --fix",
-    "test": "eslint --config eslint.config.ts ."
+    "push": "jiti ./scripts/push.ts",
+    "release": "jiti ./scripts/release.ts"
   },
   "keywords": [
     "eslint",
@@ -81,6 +82,7 @@
     "@types/node": "^20.0.0",
     "@types/prompts": "^2.4.9",
     "@types/semver": "^7.7.1",
+    "conventional-changelog-cli": "^5.0.0",
     "eslint": "^10.0.0",
     "execa": "^9.6.1",
     "fs-extra": "^11.3.5",
@@ -97,7 +99,8 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "lint-staged",
+      "commit-msg": "jiti ./scripts/verify-commit.ts"
     }
   },
   "lint-staged": {
