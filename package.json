@@ -1,6 +1,6 @@
 {
   "name": "@suressk/eslint-config",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "K.'s preset ESLint configuration",
   "packageManager": "pnpm@10.33.0",
   "type": "module",
